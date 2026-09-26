@@ -3,63 +3,41 @@ import notes from "../notes.js";
 import InvariantError from "../../../exceptions/invariant-error.js";
 import response from "../../../utils/response.js";
 import NotFoundError from "../../../exceptions/not-found-error.js";
+import NoteRepositories from "../repositories/note-repositories.js";
 
-export const createNote = (req, res, next) => {
-  const { title = "Untilted", tags, body } = req.body;
-  const id = nanoid(16);
-  const createdAt = new Date().toISOString();
-  const updatedAt = createdAt;
-
-  const newNote = { id, title, tags, body, createdAt, updatedAt };
-  notes.push(newNote);
-  const isSuccess = notes.filter((note) => note.id === id).length > 0;
-  if (!isSuccess) {
+export const createNote = async (req, res, next) => {
+  const { title, body, tags } = req.validated;
+  const note = await NoteRepositories.createNote({ title, body, tags });
+  if (!note) {
     return next(new InvariantError("Catatan gagal ditambahkan"));
   }
-  return response(res, 201, "Catatan berhasil ditambahkan", { noteId: id });
+  return response(res, 201, "Catatan berhasil ditambahkan", { noteId: note });
 };
-export const getNotes = (req, res) => {
-  const { title = "" } = req.query;
-  if (title !== "") {
-    const note = notes.filter((note) => note.title === title);
-    return response(res, 200, "success", { notes: note });
-  }
-  return res.status(200).json({
-    status: "success",
-    data: { notes },
-  });
+export const getNotes = async (req, res) => {
+  const notes = await NoteRepositories.getNotes();
+  return response(res, 200, "Catatan sukses ditampilkan", { notes: notes });
 };
-export const getNotesById = (req, res, next) => {
+export const getNotesById = async (req, res, next) => {
   const { id } = req.params;
-  const note = notes.find((note) => note.id === id);
-  console.log(note);
+
+  const note = await NoteRepositories.getNote(id);
   if (!note) {
     return next(new NotFoundError("Catatan tidak ditemukan"));
   }
   return response(res, 200, "Catatan sukses ditampilkan", { note: note });
 };
-export const editNoteById = (req, res, next) => {
+export const editNoteById = async (req, res, next) => {
   const { id } = req.params;
-  const { title, tags, body } = req.body;
-  const updatedAt = new Date().toISOString();
-  const index = notes.findIndex((n) => n.id === id);
-  console.log(index);
-  if (index === -1) {
-    return next(new NotFoundError("Catatan tidak ditemukan"));
-  }
-
-  notes[index] = { ...notes[index], title, tags, body, updatedAt };
-  return response(res, 200, "Catatan berhasil diperbarui", notes[index]);
+  const { title, tags, body } = req.validated;
+  const note = await NoteRepositories.editNote({ id, title, body, tags });
+  return response(res, 200, "Catatan berhasil diperbarui", note);
 };
 
-export const deleteNoteById = (req, res, next) => {
+export const deleteNoteById = async (req, res, next) => {
   const { id } = req.params;
-  const index = notes.findIndex((n) => n.id === id);
-
-  if (index === -1) {
+  const deletedNote = await NoteRepositories.deleleteNote(id);
+  if (!deletedNote) {
     return next(new NotFoundError("Catatan tidak ditemukan"));
   }
-
-  notes.splice(index, 1);
   return response(res, 200, "Catatan berhasil dihapus");
 };
