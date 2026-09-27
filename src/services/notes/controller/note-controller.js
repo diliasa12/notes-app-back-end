@@ -9,11 +9,25 @@ export const createNote = async (req, res, next) => {
   if (!note) {
     return next(new InvariantError("Catatan gagal ditambahkan"));
   }
+
   return response(res, 201, "Catatan berhasil ditambahkan", { noteId: note });
 };
 export const getNotes = async (req, res) => {
   const notes = await NoteRepositories.getNotes();
-  return response(res, 200, "Catatan sukses ditampilkan", { notes: notes });
+  const responseNotes = notes.map((note) => {
+    return {
+      id: note.id,
+      title: note.title,
+      body: note.body,
+      tags: note.tags,
+      createdAt: note.created_at,
+      updatedAt: note.updated_at,
+    };
+  });
+  console.log(notes);
+  return response(res, 200, "Catatan sukses ditampilkan", {
+    notes: responseNotes,
+  });
 };
 export const getNotesById = async (req, res, next) => {
   const { id } = req.params;
@@ -22,7 +36,18 @@ export const getNotesById = async (req, res, next) => {
   if (!note) {
     return next(new NotFoundError("Catatan tidak ditemukan"));
   }
-  return response(res, 200, "Catatan sukses ditampilkan", { note: note });
+  const { id: noteId, title, body, tags, created_at, updated_at } = note;
+  const responseNote = {
+    id: noteId,
+    title,
+    body,
+    tags,
+    createdAt: created_at,
+    updatedAt: updated_at,
+  };
+  return response(res, 200, "Catatan sukses ditampilkan", {
+    note: responseNote,
+  });
 };
 export const editNoteById = async (req, res, next) => {
   const { id } = req.params;
