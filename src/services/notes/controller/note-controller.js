@@ -1,5 +1,3 @@
-import { nanoid } from "nanoid";
-import notes from "../notes.js";
 import InvariantError from "../../../exceptions/invariant-error.js";
 import response from "../../../utils/response.js";
 import NotFoundError from "../../../exceptions/not-found-error.js";
@@ -30,6 +28,7 @@ export const editNoteById = async (req, res, next) => {
   const { id } = req.params;
   const { title, tags, body } = req.validated;
   const note = await NoteRepositories.editNote({ id, title, body, tags });
+  if (!note) next(new NotFoundError("Catatan tidak ditemukan"));
   return response(res, 200, "Catatan berhasil diperbarui", note);
 };
 
