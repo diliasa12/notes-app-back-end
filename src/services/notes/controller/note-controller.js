@@ -25,6 +25,7 @@ export const getNotes = async (req, res) => {
       tags: note.tags,
       createdAt: note.created_at,
       updatedAt: note.updated_at,
+      owner,
     };
   });
 
@@ -54,6 +55,7 @@ export const getNotesById = async (req, res, next) => {
     tags,
     createdAt: created_at,
     updatedAt: updated_at,
+    owner,
   };
   return response(res, 200, "Catatan sukses ditampilkan", {
     note: responseNote,
